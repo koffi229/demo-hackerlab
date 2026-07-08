@@ -1,0 +1,2790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HackerLab2k26 — National Cybersecurity CTF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --red: #ff0000;
+      --red-dim: #cc0000;
+      --red-dark: #660000;
+      --red-glow: rgba(255,0,0,0.15);
+      --bg: #000000;
+      --bg2: #0a0a0a;
+      --bg3: #111111;
+      --gray: #1a1a1a;
+      --gray2: #222222;
+      --text: #eaeef5;
+      --text-dim: #b8bcc8;
+      --green: #00ff41;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* ── GLOBAL LEGIBILITY: subtle dark halo behind all text ── */
+    p, h1, h2, h3, li, div, span, a {
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Sections get a dark glass panel so text floats above the animation */
+    section > div,
+    #briefing > div,
+    #countdown > div,
+    #rules > div,
+    #prizes > div,
+    #sponsors > div,
+    #authors > div {
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 2px;
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+
+    /* ── CANVAS BACKGROUND ── */
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* ── SCANLINES ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ── SCROLL WRAPPER ── */
+    #scroll-wrapper {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── NAV ── */
+    #nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 3rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(255,0,0,0.1);
+      backdrop-filter: blur(4px);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      height: 70px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(255,0,0,0.5)) brightness(1.1);
+      transition: filter 0.3s;
+    }
+
+    .nav-logo img:hover {
+      filter: drop-shadow(0 0 14px rgba(255,0,0,0.85)) brightness(1.25);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      color: #9ea8bc;
+      text-decoration: none;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--red);
+      text-shadow: 0 0 10px var(--red);
+    }
+
+    .nav-status {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-status img {
+      height: 150px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(255,0,0,0.4)) brightness(1.05);
+      transition: filter 0.3s;
+    }
+
+    .nav-status img:hover {
+      filter: drop-shadow(0 0 14px rgba(255,0,0,0.7)) brightness(1.2);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+
+    .hero-classified {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 5px;
+      color: rgba(255, 210, 210, 0.92);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      border: 1px solid rgba(255, 180, 180, 0.45);
+      padding: 0.3rem 1.2rem;
+      display: inline-block;
+      position: relative;
+    }
+
+    .hero-classified::before, .hero-classified::after {
+      content: '//';
+      color: rgba(255, 160, 160, 0.6);
+      margin: 0 0.5rem;
+    }
+
+    .hero-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -2px;
+      line-height: 1;
+      opacity: 0;
+      text-shadow:
+        0 0 30px rgba(255,0,0,0.6),
+        0 0 60px rgba(255,0,0,0.3),
+        0 0 120px rgba(255,0,0,0.1);
+      position: relative;
+    }
+
+    .hero-title .accent { color: var(--red); }
+
+    .hero-subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(0.9rem, 2vw, 1.3rem);
+      color: var(--text-dim);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      margin: 1rem 0 0.5rem;
+      opacity: 0;
+    }
+
+    .hero-tagline {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      font-weight: 300;
+      color: rgba(230,235,248,0.88);
+      letter-spacing: 2px;
+      margin-bottom: 3rem;
+      opacity: 0;
+      font-style: italic;
+    }
+
+    .hero-tagline span { color: var(--red); font-style: normal; }
+
+    /* CTA Button */
+    .btn-primary {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #fff;
+      background: transparent;
+      border: 2px solid var(--red);
+      padding: 1rem 3rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.3s, box-shadow 0.3s;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--red);
+      transform: translateX(-110%);
+      transition: transform 0.4s cubic-bezier(0.77,0,0.18,1);
+      z-index: -1;
+    }
+
+    .btn-primary:hover::before { transform: translateX(0); }
+    .btn-primary:hover {
+      box-shadow: 0 0 30px var(--red), 0 0 60px rgba(255,0,0,0.3);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 0.8rem 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    }
+
+    .btn-secondary:hover {
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    /* Hero mini countdown */
+    .hero-countdown {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+      opacity: 0;
+    }
+
+    .hcd-block {
+      text-align: center;
+    }
+
+    .hcd-num {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--red);
+      text-shadow: 0 0 20px var(--red);
+      line-height: 1;
+      min-width: 2ch;
+      display: block;
+    }
+
+    .hcd-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    .hcd-sep {
+      font-family: 'Orbitron', monospace;
+      font-size: 2rem;
+      color: rgba(255,0,0,0.3);
+      align-self: flex-start;
+      margin-top: 0.2rem;
+      animation: blink 1s infinite;
+    }
+
+    /* Glitch animation */
+    @keyframes glitch {
+      0% { clip-path: inset(0 0 98% 0); transform: translate(-2px, 0); }
+      10% { clip-path: inset(40% 0 50% 0); transform: translate(2px, 0); }
+      20% { clip-path: inset(80% 0 10% 0); transform: translate(-1px, 0); }
+      30% { clip-path: inset(10% 0 85% 0); transform: translate(1px, 0); }
+      40% { clip-path: inset(60% 0 30% 0); transform: translate(0, 0); }
+      100% { clip-path: inset(0 0 98% 0); transform: translate(0, 0); }
+    }
+
+    .glitch {
+      position: relative;
+    }
+
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .glitch::before {
+      color: #ff0022;
+      animation: glitch 3s infinite linear;
+      opacity: 0.7;
+    }
+
+    .glitch::after {
+      color: #0044ff;
+      animation: glitch 3s infinite linear reverse;
+      opacity: 0.5;
+    }
+
+    /* ── SECTION HEADERS ── */
+    .section-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 4px;
+      color: var(--red);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .section-tag::before {
+      content: '';
+      width: 40px;
+      height: 1px;
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    .section-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      margin-bottom: 1rem;
+    }
+
+    .section-title .accent { color: var(--red); }
+
+    /* Corner brackets decoration */
+    .bracket-box {
+      position: relative;
+      padding: 2rem;
+    }
+
+    .bracket-box::before, .bracket-box::after,
+    .bracket-box > .bracket-inner::before,
+    .bracket-box > .bracket-inner::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+    }
+
+    .bracket-box::before {
+      top: 0; left: 0;
+      border-top: 2px solid var(--red);
+      border-left: 2px solid var(--red);
+    }
+
+    .bracket-box::after {
+      top: 0; right: 0;
+      border-top: 2px solid var(--red);
+      border-right: 2px solid var(--red);
+    }
+
+    .bracket-box > .bracket-inner::before {
+      bottom: 0; left: 0;
+      border-bottom: 2px solid var(--red);
+      border-left: 2px solid var(--red);
+    }
+
+    .bracket-box > .bracket-inner::after {
+      bottom: 0; right: 0;
+      border-bottom: 2px solid var(--red);
+      border-right: 2px solid var(--red);
+    }
+
+    /* ── MISSION BRIEFING ── */
+    #briefing {
+      padding: 6rem 2rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(6,0,0,0.82) 50%, rgba(0,0,0,0.55) 100%);
+    }
+
+    .terminal-window {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(255,0,0,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(255,0,0,0.08), inset 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    .terminal-bar {
+      background: rgba(255,0,0,0.08);
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255,0,0,0.15);
+    }
+
+    .term-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .term-dot.red { background: #ff5f57; }
+    .term-dot.yellow { background: #febc2e; }
+    .term-dot.green { background: #28c840; }
+
+    .term-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .terminal-body {
+      padding: 2rem 2.5rem;
+    }
+
+    .terminal-line {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: #d8dce8;
+      margin-bottom: 0.3rem;
+    }
+
+    .terminal-line .prompt {
+      color: var(--red);
+      margin-right: 0.5rem;
+    }
+
+    .terminal-line .cmd { color: var(--green); }
+
+    .terminal-content {
+      margin: 1.5rem 0;
+      padding: 1rem 1.5rem;
+      border-left: 3px solid var(--red);
+      background: rgba(255,0,0,0.03);
+    }
+
+    .terminal-content p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.9;
+      color: #c4c8d4;
+      margin-bottom: 1rem;
+    }
+
+    .terminal-content p:last-child { margin-bottom: 0; }
+
+    .terminal-cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--green);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+      margin-left: 2px;
+    }
+
+    .classified-stamp {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--red);
+      border: 2px solid var(--red);
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      letter-spacing: 4px;
+      transform: rotate(-3deg);
+      opacity: 0.7;
+      margin-bottom: 1rem;
+    }
+
+    /* ── COUNTDOWN SECTION ── */
+    #countdown {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: rgba(4,0,0,0.82);
+    }
+
+    .countdown-grid {
+      display: flex;
+      justify-content: center;
+      gap: clamp(1rem, 3vw, 4rem);
+      flex-wrap: wrap;
+      margin-top: 3rem;
+    }
+
+    .cd-block {
+      position: relative;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .cd-frame {
+      position: relative;
+      padding: 1.5rem 2rem;
+      background: rgba(15,0,0,0.8);
+      border: 1px solid rgba(255,0,0,0.3);
+      margin-bottom: 1rem;
+    }
+
+    .cd-frame::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 1px solid rgba(255,0,0,0.1);
+      pointer-events: none;
+    }
+
+    .cd-scanline {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      animation: scan 3s linear infinite;
+      opacity: 0.5;
+    }
+
+    @keyframes scan {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+
+    .cd-num {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      text-shadow:
+        0 0 20px rgba(255,0,0,0.8),
+        0 0 40px rgba(255,0,0,0.4);
+      min-width: 2ch;
+      display: block;
+    }
+
+    .cd-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 4px;
+      color: var(--red);
+      text-transform: uppercase;
+    }
+
+    .cd-sep-v {
+      font-family: 'Orbitron', monospace;
+      font-size: 3rem;
+      color: rgba(255,0,0,0.3);
+      align-self: flex-start;
+      margin-top: 1rem;
+      animation: blink 1s step-end infinite;
+    }
+
+    .event-date {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      margin-top: 2rem;
+    }
+
+    .event-date span { color: var(--red); }
+
+    /* ── RULES ── */
+    #rules {
+      padding: 6rem 2rem;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    .rule-card {
+      background: rgba(10,0,0,0.7);
+      border: 1px solid rgba(255,0,0,0.15);
+      padding: 1.5rem;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      cursor: default;
+    }
+
+    .rule-card:hover {
+      border-color: rgba(255,0,0,0.5);
+      box-shadow: 0 0 20px rgba(255,0,0,0.08);
+    }
+
+    .rule-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 3px;
+      margin-bottom: 0.5rem;
+    }
+
+    .rule-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+      filter: drop-shadow(0 0 6px var(--red));
+    }
+
+    .rule-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: #cdd1dd;
+      line-height: 1.6;
+    }
+
+    .rule-flag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--green);
+      background: rgba(0,255,65,0.05);
+      border: 1px solid rgba(0,255,65,0.2);
+      padding: 0.3rem 0.8rem;
+      display: inline-block;
+      margin-top: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    /* ── PRIZES ── */
+    #prizes {
+      padding: 6rem 2rem;
+      background: rgba(4,0,0,0.80);
+    }
+
+    .prizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+      align-items: start;
+    }
+
+    .prize-card {
+      position: relative;
+      background: rgba(8,0,0,0.9);
+      border: 1px solid rgba(255,0,0,0.2);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      transition: transform 0.4s, box-shadow 0.4s;
+      overflow: hidden;
+    }
+
+    .prize-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+    }
+
+    .prize-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(255,0,0,0.15), 0 0 30px rgba(255,0,0,0.08);
+    }
+
+    .prize-card.gold {
+      border-color: rgba(255,215,0,0.3);
+      transform: scale(1.04);
+    }
+
+    .prize-card.gold::before {
+      background: linear-gradient(90deg, transparent, #ffd700, transparent);
+    }
+
+    .prize-card.gold:hover {
+      box-shadow: 0 20px 60px rgba(255,215,0,0.15), 0 0 30px rgba(255,215,0,0.1);
+    }
+
+    .prize-card.silver {
+      border-color: rgba(192,192,192,0.25);
+    }
+
+    .prize-card.silver::before {
+      background: linear-gradient(90deg, transparent, #c0c0c0, transparent);
+    }
+
+    .prize-card.bronze {
+      border-color: rgba(205,127,50,0.25);
+    }
+
+    .prize-card.bronze::before {
+      background: linear-gradient(90deg, transparent, #cd7f32, transparent);
+    }
+
+    .prize-rank {
+      font-family: 'Orbitron', monospace;
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .prize-card.gold .prize-rank { color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.5); }
+    .prize-card.silver .prize-rank { color: #c0c0c0; text-shadow: 0 0 30px rgba(192,192,192,0.3); }
+    .prize-card.bronze .prize-rank { color: #cd7f32; text-shadow: 0 0 30px rgba(205,127,50,0.3); }
+
+    .prize-place {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    .prize-cert {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--red);
+      background: rgba(255,0,0,0.06);
+      border: 1px solid rgba(255,0,0,0.2);
+      padding: 0.5rem 1rem;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .prize-item {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      color: #bcc0cc;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .prize-item::before {
+      content: '▸';
+      color: var(--red);
+      font-size: 0.7rem;
+    }
+
+    .prize-amount {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .prize-card.gold .prize-amount { color: #ffd700; }
+    .prize-card.silver .prize-amount { color: #c0c0c0; }
+    .prize-card.bronze .prize-amount { color: #cd7f32; }
+
+    .prize-amount small {
+      display: block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      margin-top: 0.2rem;
+    }
+
+    /* Prize card floating particles */
+    .prize-card-particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .pcp {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      animation: float-up 4s linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes float-up {
+      0% { opacity: 0; transform: translateY(100%); }
+      10% { opacity: 1; }
+      90% { opacity: 0.5; }
+      100% { opacity: 0; transform: translateY(-100%); }
+    }
+
+    /* ── SPONSORS ── */
+    #sponsors {
+      padding: 6rem 2rem;
+    }
+
+    .sponsors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    .sponsor-card {
+      background: rgba(15,0,0,0.6);
+      border: 1px solid rgba(255,0,0,0.12);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.35s;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sponsor-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255,0,0,0.07) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .sponsor-card:hover {
+      border-color: rgba(255,0,0,0.45);
+      box-shadow: 0 0 28px rgba(255,0,0,0.12);
+      transform: translateY(-4px);
+    }
+
+    .sponsor-card:hover::after { opacity: 1; }
+
+    /* Logo image wrapper */
+    .sponsor-logo-wrap {
+      width: 80px;
+      height: 60px;
+      margin: 0 auto 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .sponsor-logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: grayscale(30%) brightness(0.9);
+      transition: filter 0.35s, transform 0.35s;
+    }
+
+    .sponsor-card:hover .sponsor-logo-wrap img {
+      filter: grayscale(0%) brightness(1.15) drop-shadow(0 0 8px rgba(255,0,0,0.35));
+      transform: scale(1.06);
+    }
+
+    /* Fallback placeholder (shown when img fails / before load) */
+    .sponsor-logo-placeholder {
+      width: 80px; height: 60px;
+      margin: 0 auto 0.8rem;
+      background: rgba(255,0,0,0.08);
+      border: 1px solid rgba(255,0,0,0.2);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 1px;
+      text-align: center;
+      line-height: 1.3;
+      padding: 4px;
+      transition: box-shadow 0.3s;
+    }
+
+    .sponsor-card:hover .sponsor-logo-placeholder {
+      box-shadow: 0 0 18px rgba(255,0,0,0.3);
+    }
+
+    .sponsor-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .sponsor-card:hover .sponsor-name { color: var(--red); }
+    .sponsor-card:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+    /* ── AUTHORS ── */
+    #authors {
+      padding: 6rem 2rem;
+      background: rgba(4,0,0,0.80);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 3rem auto 0;
+    }
+
+    .team-card {
+      background: rgba(8,0,0,0.8);
+      border: 1px solid rgba(255,0,0,0.15);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+      transition: all 0.4s;
+      overflow: hidden;
+    }
+
+    .team-card::before {
+      content: '';
+      position: absolute;
+      top: -100%;
+      left: 0; right: 0;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, rgba(255,0,0,0.04));
+      transition: top 0.4s;
+    }
+
+    .team-card:hover::before { top: 0; }
+
+    .team-card:hover {
+      border-color: rgba(255,0,0,0.4);
+      box-shadow: 0 0 30px rgba(255,0,0,0.1);
+    }
+
+    .team-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      background: rgba(255,0,0,0.08);
+      border: 2px solid rgba(255,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--red);
+      text-shadow: 0 0 15px var(--red);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .team-avatar::after {
+      content: '';
+      position: absolute;
+      width: 100%; height: 2px;
+      background: rgba(255,0,0,0.4);
+      top: 0;
+      animation: scan 2s linear infinite;
+    }
+
+    .team-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      margin-bottom: 0.4rem;
+    }
+
+    .team-handle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--red);
+      letter-spacing: 2px;
+      margin-bottom: 0.8rem;
+    }
+
+    .team-role {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 10;
+      padding: 3rem 2rem;
+      text-align: center;
+      border-top: 1px solid rgba(255,0,0,0.1);
+      background: rgba(0,0,0,0.9);
+    }
+
+    .footer-logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 3px;
+      text-shadow: 0 0 20px var(--red);
+      margin-bottom: 1rem;
+    }
+
+    .footer-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    .footer-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      margin: 1.5rem auto;
+      max-width: 400px;
+    }
+
+    /* ── HORIZONTAL DIVIDERS ── */
+    .cyber-divider {
+      position: relative;
+      height: 1px;
+      background: rgba(255,0,0,0.08);
+      margin: 0;
+      overflow: visible;
+    }
+
+    .cyber-divider::before {
+      content: '◆';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--red);
+      font-size: 0.6rem;
+      background: var(--bg);
+      padding: 0 0.5rem;
+      text-shadow: 0 0 10px var(--red);
+    }
+
+    /* ── SCROLL REVEAL CLASSES ── */
+    .reveal { opacity: 0; transform: translateY(30px); }
+    .reveal-left { opacity: 0; transform: translateX(-40px); }
+    .reveal-right { opacity: 0; transform: translateX(40px); }
+    .reveal-scale { opacity: 0; transform: scale(0.9); }
+
+    /* ── TICKER TAPE ── */
+    .ticker-wrap {
+      overflow: hidden;
+      background: rgba(255,0,0,0.06);
+      border-top: 1px solid rgba(255,0,0,0.2);
+      border-bottom: 1px solid rgba(255,0,0,0.2);
+      padding: 0.6rem 0;
+      position: relative;
+      z-index: 20;
+    }
+
+    .ticker {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker 30s linear infinite;
+    }
+
+    .ticker-item {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--red);
+      letter-spacing: 2px;
+      padding: 0 3rem;
+      opacity: 0.7;
+    }
+
+    .ticker-item .sep { color: rgba(255,0,0,0.3); margin: 0 1rem; }
+
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── HEX GRID BG ── */
+    .hex-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(255,0,0,0.06) 1px, transparent 0);
+      background-size: 40px 40px;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    /* ── MOBILE RESPONSIVENESS ── */
+    @media (max-width: 768px) {
+      #nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .terminal-body { padding: 1.5rem; }
+      .prizes-grid { grid-template-columns: 1fr; }
+      .prize-card.gold { transform: none; }
+    }
+
+    /* ── CUSTOM SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--red-dark); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+    /* ── SELECTION ── */
+    ::selection { background: rgba(255,0,0,0.3); color: #fff; }
+
+    /* ── LOADING OVERLAY ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s, visibility 0.8s;
+    }
+
+    #loading.hidden { opacity: 0; visibility: hidden; }
+
+    .loading-logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--red);
+      letter-spacing: 4px;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 20px var(--red);
+    }
+
+    .loading-bar-wrap {
+      width: 300px;
+      height: 2px;
+      background: rgba(255,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loading-bar {
+      height: 100%;
+      background: var(--red);
+      box-shadow: 0 0 10px var(--red);
+      width: 0%;
+      animation: load 1.5s ease forwards;
+    }
+
+    @keyframes load {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    .loading-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      margin-top: 1rem;
+      animation: flicker 0.15s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading">
+  <div class="loading-logo">HACKERLAB2K26</div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar"></div>
+  </div>
+  <div class="loading-text">INITIALIZING SECURE CONNECTION...</div>
+</div>
+
+<!-- ══ BACKGROUND CANVAS ══ -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ══ SCROLL WRAPPER ══ -->
+<div id="scroll-wrapper">
+
+  <!-- ══ NAVIGATION ══ -->
+  <nav id="nav">
+    <!-- LOGO GAUCHE — remplacez src="assets/logo-left.png" par votre chemin réel -->
+    <a href="#hero" class="nav-logo">
+      <img src="assets/logo-left.png" alt="HackerLab2k26"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span style="display:none;font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--red);letter-spacing:3px;text-shadow:0 0 20px var(--red)">HL2K26</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#briefing">Briefing</a></li>
+      <li><a href="#countdown">Countdown</a></li>
+      <li><a href="#rules">Rules</a></li>
+      <li><a href="#prizes">Prizes</a></li>
+      <li><a href="#sponsors">Sponsors</a></li>
+    </ul>
+    <!-- LOGO DROIT — remplacez src="assets/logo-right.png" par votre chemin réel -->
+    <div class="nav-status">
+      <img src="assets/logo-right.png" alt="Partner Logo"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span style="display:none;font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--green);letter-spacing:2px;align-items:center;gap:0.5rem">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite;display:inline-block"></span>
+        SYSTEM ONLINE
+      </span>
+    </div>
+  </nav>
+
+  <!-- ══ TICKER 
+  <div class="ticker-wrap" style="position:fixed;top:0;z-index:99;width:100%;display:none" id="ticker-bar">
+    <div class="ticker">
+      <span class="ticker-item">HACKERLAB2K26 <span class="sep">◆</span> NATIONAL CYBERSECURITY CTF <span class="sep">◆</span> REGISTRATION OPEN <span class="sep">◆</span> HLB2K26{***} <span class="sep">◆</span> DEFEND TERVALIS <span class="sep">◆</span> FLAG FORMAT: HLB2K26{***} <span class="sep">◆</span> JOIN THE DISCORD <span class="sep">◆</span></span>
+      <span class="ticker-item">HACKERLAB2K26 <span class="sep">◆</span> NATIONAL CYBERSECURITY CTF <span class="sep">◆</span> REGISTRATION OPEN <span class="sep">◆</span> HLB2K26{***} <span class="sep">◆</span> DEFEND TERVALIS <span class="sep">◆</span> FLAG FORMAT: HLB2K26{***} <span class="sep">◆</span> JOIN THE DISCORD <span class="sep">◆</span></span>
+    </div>
+  </div>══ -->
+
+  <!-- ══ HERO SECTION ══ -->
+  <section id="hero">
+    <div class="hex-bg"></div>
+
+    <div style="position:relative;z-index:2">
+      <div class="hero-classified" id="hero-classified">// OPERATION TERVALIS — CLASSIFIED //</div>
+
+      <h1 class="hero-title glitch" data-text="HackerLab2k26" id="hero-title">
+        Hacker<span class="accent">Lab</span>2k26
+      </h1>
+
+      <div class="hero-subtitle" id="hero-subtitle">National Cybersecurity CTF Competition</div>
+
+      <!--<p class="hero-tagline" id="hero-tagline">
+        The digital battlefield is <span>real</span>. Are you ready to defend the nation?
+      </p>>
+
+      <!-- Mini Countdown -->
+      <div class="hero-countdown" id="hero-countdown">
+        <div class="hcd-block">
+          <span class="hcd-num" id="hcd-days">00</span>
+          <span class="hcd-label">Days</span>
+        </div>
+        <div class="hcd-sep">:</div>
+        <div class="hcd-block">
+          <span class="hcd-num" id="hcd-hours">00</span>
+          <span class="hcd-label">Hours</span>
+        </div>
+        <div class="hcd-sep">:</div>
+        <div class="hcd-block">
+          <span class="hcd-num" id="hcd-mins">00</span>
+          <span class="hcd-label">Minutes</span>
+        </div>
+        <div class="hcd-sep">:</div>
+        <div class="hcd-block">
+          <span class="hcd-num" id="hcd-secs">00</span>
+          <span class="hcd-label">Seconds</span>
+        </div>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div style="display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;opacity:0" id="hero-cta">
+        <a href="https://discord.gg/hackerlab2k26" class="btn-primary" target="_blank">
+          ⚡ Join the Discord
+        </a>
+        <a href="#briefing" class="btn-secondary">
+          Read Briefing →
+        </a>
+      </div>
+
+      <!-- Hero bottom info 
+      <div style="margin-top:3rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;opacity:0" id="hero-info">
+        <div style="text-align:center">
+          <div style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:var(--red)">2-4</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px">PLAYERS/TEAM</div>
+        </div>
+        <div style="width:1px;background:rgba(255,0,0,0.2)"></div>
+        <div style="text-align:center">
+          <div style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:var(--red)">4,500,000</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px">FCFA IN PRIZES</div>
+        </div>
+        <div style="width:1px;background:rgba(255,0,0,0.2)"></div>
+        <div style="text-align:center">
+          <div style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:var(--red)">9+</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:2px">SPONSORS</div>
+        </div>
+      </div>
+    </div>-->
+
+   <!-- Scroll indicator -->
+    <div style="position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;z-index:2">
+      <!--<div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);letter-spacing:3px">SCROLL DOWN</div>-->
+      <div style="width:1px;height:40px;background:linear-gradient(180deg,var(--red),transparent);animation:pulse-height 2s ease infinite"></div>
+    </div>
+  </section>
+
+  <!-- Ticker activates after hero 
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span class="ticker-item">HACKERLAB2K26 <span class="sep">◆</span> NATIONAL CYBERSECURITY CTF <span class="sep">◆</span> REGISTRATION OPEN <span class="sep">◆</span> FLAG FORMAT: HLB2K26{***} <span class="sep">◆</span> DEFEND TERVALIS <span class="sep">◆</span> JOIN THE DISCORD NOW <span class="sep">◆</span> PRIZES UP TO 2,000,000 FCFA <span class="sep">◆</span></span>
+      <span class="ticker-item">HACKERLAB2K26 <span class="sep">◆</span> NATIONAL CYBERSECURITY CTF <span class="sep">◆</span> REGISTRATION OPEN <span class="sep">◆</span> FLAG FORMAT: HLB2K26{***} <span class="sep">◆</span> DEFEND TERVALIS <span class="sep">◆</span> JOIN THE DISCORD NOW <span class="sep">◆</span> PRIZES UP TO 2,000,000 FCFA <span class="sep">◆</span></span>
+    </div>
+  </div> -->
+
+  <!-- ══ MISSION BRIEFING ══ -->
+  <section id="briefing">
+    <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal">OPERATION TERVALIS</div>
+      <h2 class="section-title reveal"><span class="accent">Mission</span> Briefing</h2>
+
+      <div class="terminal-window reveal" style="margin-top:2rem">
+        <div class="terminal-bar">
+          <span class="term-dot red"></span>
+          <span class="term-dot yellow"></span>
+          <span class="term-dot green"></span>
+          <span class="term-title">tervalis_briefing.sh — CLASSIFIED LEVEL 5</span>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line">
+            <span class="prompt">root@tervalis:~$</span>
+            <span class="cmd">cat /ops/mission_brief.txt</span>
+          </div>
+          <div class="terminal-line" style="color:#8a9ab8;font-size:0.7rem;margin-bottom:1rem">
+            Loading encrypted mission file... [OK]
+          </div>
+
+          <div style="margin-bottom:1rem">
+            <div class="classified-stamp">TOP SECRET</div>
+          </div>
+
+          <div class="terminal-content">
+            <p>
+              Dans un monde où l’information est devenue une arme stratégique, les affrontements ne se jouent plus seulement sur le terrain physique,
+               mais dans l’ombre du cyberespace, derrière des écrans et sous des identités masquées. Sous ces masques numériques se déploient des opérations d’espionnage, 
+               d’exfiltration furtives, des compromissions d’infrastructures critiques et des campagnes coordonnées de manipulation de l’opinion.
+            </p>
+            <p>
+              Les participants incarnent les défenseurs <strong style="color:var(--red)">Tervalis</strong>, une nation fictive confrontée à cette menace invisible. 
+              Leur mission : lever le voile sur ces acteurs masqués, remonter les chaînes d’attaque, 
+              analyser les traces laissées par l’adversaire et mener des actions de contre-espionnage numérique afin de protéger les systèmes critiques et restaurer la confiance.
+            </p>
+          </div>
+
+          <div style="margin-top:1.5rem">
+            <div class="terminal-line">
+              <span class="prompt">root@tervalis:~$</span>
+              <span class="cmd">decrypt --key=TRVLS_ALPHA mission_objectives.enc</span>
+            </div>
+            <div class="terminal-line" style="color:#8a9ab8;font-size:0.7rem;margin:0.5rem 0">
+              Decrypting... [################] 100%
+            </div>
+          </div>
+
+
+          <div style="margin:1.5rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+            <div style="padding:1rem;border:1px solid rgba(255,0,0,0.2);background:rgba(255,0,0,0.03)">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red);letter-spacing:2px;margin-bottom:0.5rem">OBJECTIf 01</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#c8ccda">Identifier et attribuer les acteurs de la menace</div>
+            </div>
+            <div style="padding:1rem;border:1px solid rgba(255,0,0,0.2);background:rgba(255,0,0,0.03)">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red);letter-spacing:2px;margin-bottom:0.5rem">OBJECTIf 02</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#c8ccda">Remonter les chaînes d’attaque et analyser les traces numériques</div>
+            </div>
+            <div style="padding:1rem;border:1px solid rgba(255,0,0,0.2);background:rgba(255,0,0,0.03)">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red);letter-spacing:2px;margin-bottom:0.5rem">OBJECTIf 03</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#c8ccda">Protéger les infrastructures critiques</div>
+            </div>
+            <div style="padding:1rem;border:1px solid rgba(255,0,0,0.2);background:rgba(255,0,0,0.03)">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--red);letter-spacing:2px;margin-bottom:0.5rem">OBJECTIf 04</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#c8ccda">Mener des opérations de contre-espionnage numérique</div>
+            </div>
+          </div>
+
+          <div class="terminal-line">
+            <span class="prompt">root@tervalis:~$</span>
+            <span class="cmd" id="typing-line">_</span>
+            <span class="terminal-cursor"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cyber-divider"></div>
+
+  <!-- ══ COUNTDOWN SECTION ══ -->
+  <section id="countdown">
+    <div style="max-width:900px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal" style="justify-content:center">T-MINUS</div>
+      <h2 class="section-title reveal" style="text-align:center">Event <span class="accent">Countdown</span></h2>
+      <p class="reveal" style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:#b0b8cc;letter-spacing:2px;margin-top:0.5rem">
+        OPERATION TERVALIS GOES LIVE IN
+      </p>
+
+      <div class="countdown-grid">
+        <div class="cd-block reveal-scale">
+          <div class="cd-frame">
+            <div class="cd-scanline"></div>
+            <span class="cd-num" id="cd-days">000</span>
+          </div>
+          <div class="cd-label">Days</div>
+        </div>
+        <div class="cd-sep-v reveal">:</div>
+        <div class="cd-block reveal-scale">
+          <div class="cd-frame">
+            <div class="cd-scanline" style="animation-delay:1s"></div>
+            <span class="cd-num" id="cd-hours">00</span>
+          </div>
+          <div class="cd-label">Hours</div>
+        </div>
+        <div class="cd-sep-v reveal">:</div>
+        <div class="cd-block reveal-scale">
+          <div class="cd-frame">
+            <div class="cd-scanline" style="animation-delay:2s"></div>
+            <span class="cd-num" id="cd-mins">00</span>
+          </div>
+          <div class="cd-label">Minutes</div>
+        </div>
+        <div class="cd-sep-v reveal">:</div>
+        <div class="cd-block reveal-scale">
+          <div class="cd-frame">
+            <div class="cd-scanline" style="animation-delay:0.5s"></div>
+            <span class="cd-num" id="cd-secs">00</span>
+          </div>
+          <div class="cd-label">Seconds</div>
+        </div>
+      </div>
+
+      <p class="event-date reveal" style="text-align:center">
+        Competition Date: <span>JUNE 15, 2026</span> — Location: <span>COTONOU, BÉNIN</span>
+      </p>
+    </div>
+  </section>
+
+  <div class="cyber-divider"></div>
+
+  <!-- ══ RULES ══ -->
+  <section id="rules">
+    <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal">OPERATION PARAMETERS</div>
+      <h2 class="section-title reveal">Competition <span class="accent">Rules</span></h2>
+
+      <div class="rules-grid">
+        <div class="rule-card reveal-left">
+          <div class="rule-num">RULE // 01</div>
+          <div class="rule-icon">🛡️</div>
+          <div class="rule-text">Attaquer le serveur web est <strong style="color:var(--red)">strictement interdit</strong> et entraînera une disqualification immédiate.</div>
+        </div>
+        <div class="rule-card reveal-left">
+          <div class="rule-num">RULE // 02</div>
+          <div class="rule-icon">👥</div>
+          <div class="rule-text">Les équipes doivent être composées de <strong style="color:var(--red)">deux personnes au minimum et de quatre personnes</strong> au maximum.</div>
+        </div>
+        <div class="rule-card reveal-right">
+          <div class="rule-num">RULE // 03</div>
+          <div class="rule-icon">🚫</div>
+          <div class="rule-text"><strong style="color:var(--red)">Le bruteforce des flags sur cette plateforme n'est pas autorisée</strong> et ne vous mènera nulle part.</div>
+        </div>
+        <div class="rule-card reveal-right">
+          <div class="rule-num">RULE // 04</div>
+          <div class="rule-icon">💬</div>
+          <div class="rule-text">Toute question concernant les défis ou la plateforme doit être posée <strong style="color:var(--red)">uniquement via notre serveur Discord</strong>.</div>
+        </div>
+        <div class="rule-card reveal-left" style="grid-column:span 1">
+          <div class="rule-num">RULE // 05</div>
+          <div class="rule-icon">🚩</div>
+          <div class="rule-text">Les drapeaux sauf indication contraire, ont le format</div>
+          <div class="rule-flag">HLB2K26{flag_content_here}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cyber-divider"></div>
+
+  <!-- ══ PRIZES ══ -->
+  <section id="prizes">
+    <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal">MISSION REWARDS</div>
+      <h2 class="section-title reveal"><span class="accent">Prizes</span></h2>
+      <!--<p class="reveal" style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:1rem">
+        Elite operatives deserve elite rewards. Secure your future in cybersecurity.
+      </p> -->
+
+      <div class="prizes-grid">
+
+        <!-- 2nd Place -->
+        <div class="prize-card silver reveal-left">
+          <div class="prize-card-particles" id="silver-particles"></div>
+          <div class="prize-rank">02</div>
+          <div class="prize-place">Second Place</div>
+          <div class="prize-cert">PNPT</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#b0b8cc;margin-bottom:1.5rem;letter-spacing:1px">
+            Practical Network Penetration Tester
+          </div>
+          <div class="prize-item">Professional Certification</div>
+          <div class="prize-item">Industry Recognition</div>
+          <div class="prize-amount">
+            1,500,000
+            <small>FCFA</small>
+          </div>
+        </div>
+
+        <!-- 1st Place -->
+        <div class="prize-card gold reveal" style="order:-1">
+          <div class="prize-card-particles" id="gold-particles"></div>
+          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:0.6rem;letter-spacing:3px;color:#000;background:#ffd700;padding:0.2rem 1rem;white-space:nowrap">
+            ★ ELITE TIER ★
+          </div>
+          <div class="prize-rank">01</div>
+          <div class="prize-place">First Place</div>
+          <div class="prize-cert">OSCP</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#b0b8cc;margin-bottom:1.5rem;letter-spacing:1px">
+            Offensive Security Certified Professional
+          </div>
+          <div class="prize-item">Premium Laptops</div>
+          <div class="prize-item">Elite Certification</div>
+          <div class="prize-item">Hall of Fame Recognition</div>
+          <div class="prize-amount">
+            2,000,000
+            <small>FCFA</small>
+          </div>
+        </div>
+
+        <!-- 3rd Place -->
+        <div class="prize-card bronze reveal-right">
+          <div class="prize-card-particles" id="bronze-particles"></div>
+          <div class="prize-rank">03</div>
+          <div class="prize-place">Third Place</div>
+          <div class="prize-cert">eJPT</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#b0b8cc;margin-bottom:1.5rem;letter-spacing:1px">
+            eLearnSecurity Junior Penetration Tester
+          </div>
+          <div class="prize-item">Junior Certification</div>
+          <div class="prize-item">Career Launchpad</div>
+          <div class="prize-amount">
+            1,000,000
+            <small>FCFA</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cyber-divider"></div>
+
+  <!-- ══ SPONSORS ══ -->
+  <section id="sponsors">
+    <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal">ALLIED FORCES</div>
+      <h2 class="section-title reveal">Our <span class="accent">Sponsors</span></h2>
+      <p class="reveal" style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:1rem">
+        The organizations powering the next generation of cyber defenders.
+      </p>
+
+      <div class="sponsors-grid">
+        <!-- CNIN — remplacez "assets/cnin.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.cnin.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/cnin.png" alt="CNIN logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">CNIN</div>
+          <div class="sponsor-name">CNIN</div>
+        </a>
+        <!-- SBIN — remplacez "assets/sbin.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.sbin.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/sbin.png" alt="SBIN logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">SBIN</div>
+          <div class="sponsor-name">SBIN</div>
+        </a>
+        <!-- Quality Corporate — remplacez "assets/qc.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.qualitycorporate.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/qc.png" alt="Quality Corporate logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">QC</div>
+          <div class="sponsor-name">Quality Corporate</div>
+        </a>
+        <!-- Top Tech Services — remplacez "assets/tts.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.toptechservices.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/tts.png" alt="Top Tech Services logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">TTS</div>
+          <div class="sponsor-name">Top Tech Services</div>
+        </a>
+        <!-- ISOCEL — remplacez "assets/isocel.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.isocel.net" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/isocel.png" alt="ISOCEL logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">ISO</div>
+          <div class="sponsor-name">ISOCEL</div>
+        </a>
+        <!-- Global IT Service — remplacez "assets/gits.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.globalitservice.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/gits.png" alt="Global IT Service logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">GITS</div>
+          <div class="sponsor-name">Global IT Service</div>
+        </a>
+        <!-- Cyber Africa Forum — remplacez "assets/caf.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.cyberafricaforum.com" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/caf.png" alt="Cyber Africa Forum logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">CAF</div>
+          <div class="sponsor-name">Cyber Africa Forum</div>
+        </a>
+        <!-- IServices — remplacez "assets/iservices.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.iservices.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/iservices.png" alt="IServices logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">ISvc</div>
+          <div class="sponsor-name">IServices</div>
+        </a>
+        <!-- OGIT Consulting — remplacez "assets/ogit.png" par votre logo réel -->
+        <a class="sponsor-card reveal-scale" href="https://www.ogitconsulting.bj" target="_blank" rel="noopener noreferrer">
+          <div class="sponsor-logo-wrap">
+            <img src="assets/ogit.png" alt="OGIT Consulting logo"
+                 onerror="this.closest('.sponsor-logo-wrap').style.display='none';this.closest('.sponsor-card').querySelector('.sponsor-logo-placeholder').style.display='flex'">
+          </div>
+          <div class="sponsor-logo-placeholder" style="display:none">OGIT</div>
+          <div class="sponsor-name">OGIT Consulting</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="cyber-divider"></div>
+
+  <!-- ══ AUTHORS / ORGANIZERS ══ -->
+  <section id="authors">
+    <div style="max-width:1100px;margin:0 auto;padding:0 1rem">
+      <div class="section-tag reveal">CYBER COMMAND</div>
+      <h2 class="section-title reveal">The <span class="accent">Organizers</span></h2>
+      <p class="reveal" style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:1rem">
+        The elite team behind Operation Tervalis.
+      </p>
+
+      <div class="team-grid">
+        <div class="team-card reveal-scale">
+          <div class="team-avatar">AK</div>
+          <div class="team-name">ALPHA KILO</div>
+          <div class="team-handle">@alpha_k</div>
+          <div class="team-role">Challenge Architect</div>
+        </div>
+        <div class="team-card reveal-scale">
+          <div class="team-avatar">BR</div>
+          <div class="team-name">BRAVO REX</div>
+          <div class="team-handle">@b_rex</div>
+          <div class="team-role">Infrastructure Ops</div>
+        </div>
+        <div class="team-card reveal-scale">
+          <div class="team-avatar">CZ</div>
+          <div class="team-name">CIPHER ZERO</div>
+          <div class="team-handle">@c1ph3r_0</div>
+          <div class="team-role">CTF Designer</div>
+        </div>
+        <div class="team-card reveal-scale">
+          <div class="team-avatar">DX</div>
+          <div class="team-name">DELTA X</div>
+          <div class="team-handle">@d3lta_x</div>
+          <div class="team-role">Security Lead</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-logo">HACKERLAB2K26</div>
+    <div class="footer-line"></div>
+    <div class="footer-text">
+      © 2026 HACKERLAB — OPERATION TERVALIS — ALL INTELLIGENCE CLASSIFIED
+    </div>
+    <div style="margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:rgba(255,0,0,0.3);letter-spacing:2px">
+      HLB2K26{th3_n4t10n_d3p3nds_0n_y0u}
+    </div>
+  </footer>
+
+</div><!-- end scroll-wrapper -->
+
+<style>
+@keyframes pulse-height {
+  0%, 100% { opacity: 1; transform: scaleY(1); }
+  50% { opacity: 0.3; transform: scaleY(0.6); }
+}
+</style>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  THREE.JS — CYBER WAR MAP  (GoT-style construction engine)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 1);
+
+  // ── CLOCK & SCENE ──
+  const clock = new THREE.Clock();
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.004);
+
+  // ── CAMERA: elevated angle looking down like a war-room briefing table ──
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.set(0, 160, 140);
+  camera.lookAt(0, 0, 0);
+
+  // ════════════════════════════════════════════════════════
+  //  SCENE GROUPS
+  // ════════════════════════════════════════════════════════
+  const grpTerrain     = new THREE.Group(); // ground grid
+  const grpBase        = new THREE.Group(); // expanding base platforms
+  const grpTowers      = new THREE.Group(); // rising infrastructure towers
+  const grpConduits    = new THREE.Group(); // arcing data highways
+  const grpFlow        = new THREE.Group(); // data packet streams
+  const grpRadar       = new THREE.Group(); // rotating scan sweep
+  const grpPulses      = new THREE.Group(); // attack shockwaves
+  const grpOrbit       = new THREE.Group(); // orbital rings + satellites
+  const grpAtmosphere  = new THREE.Group(); // stars, dust
+  scene.add(grpTerrain, grpBase, grpTowers, grpConduits, grpFlow, grpRadar, grpPulses, grpOrbit, grpAtmosphere);
+
+  // ════════════════════════════════════════════════════════
+  //  1. TERRAIN — animated wave grid
+  // ════════════════════════════════════════════════════════
+  const TERRAIN_SIZE = 500;
+  const TERRAIN_SEGS = 70;
+  const terrGeom = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGS, TERRAIN_SEGS);
+  terrGeom.rotateX(-Math.PI / 2);
+
+  // Store base positions for wave animation
+  const basePos = Float32Array.from(terrGeom.attributes.position.array);
+
+  // Vertex colors: dark base, red-highlight peaks
+  const terrColors = new Float32Array(terrGeom.attributes.position.count * 3);
+  terrGeom.setAttribute('color', new THREE.BufferAttribute(terrColors, 3));
+
+  const terrMat = new THREE.MeshBasicMaterial({
+    wireframe: true,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.18,
+  });
+  grpTerrain.add(new THREE.Mesh(terrGeom, terrMat));
+
+  // Secondary denser inner grid
+  const innerGrid = new THREE.GridHelper(180, 36, 0x1a0000, 0x0d0000);
+  innerGrid.material.transparent = true;
+  innerGrid.material.opacity = 0.35;
+  grpTerrain.add(innerGrid);
+
+  // ════════════════════════════════════════════════════════
+  //  2. MAJOR NODE POSITIONS — the "cities" of Tervalis
+  // ════════════════════════════════════════════════════════
+  const MAJOR_NODES = [
+    // Central command cluster
+    new THREE.Vector3(  0,  0,   0),
+    new THREE.Vector3( 12,  0,  -8),
+    new THREE.Vector3( -9,  0,  11),
+    // Western frontier
+    new THREE.Vector3(-70,  0, -20),
+    new THREE.Vector3(-55,  0,  30),
+    new THREE.Vector3(-80,  0,  50),
+    // Eastern sector
+    new THREE.Vector3( 65,  0, -15),
+    new THREE.Vector3( 78,  0,  25),
+    new THREE.Vector3( 50,  0,  55),
+    // Northern stronghold
+    new THREE.Vector3(-25,  0, -65),
+    new THREE.Vector3( 30,  0, -70),
+    new THREE.Vector3(  5,  0, -85),
+    // Southern perimeter
+    new THREE.Vector3(-40,  0,  75),
+    new THREE.Vector3( 20,  0,  80),
+    new THREE.Vector3( 60,  0,  70),
+    // Outposts
+    new THREE.Vector3(-100, 0,  -60),
+    new THREE.Vector3( 95,  0, -65),
+    new THREE.Vector3(-95,  0,  80),
+  ];
+
+  // ════════════════════════════════════════════════════════
+  //  3. EXPANDING BASE PLATFORMS (GoT: city foundations rising)
+  //     Each node gets a hexagonal-ish expanding ring sequence
+  // ════════════════════════════════════════════════════════
+  const basePlatformData = [];
+
+  MAJOR_NODES.forEach((pos, i) => {
+    const buildDelay = 0.5 + i * 1.1; // staggered, so you watch them build one-by-one
+
+    // 3 concentric rings per node: inner → outer, each delayed
+    [4, 8, 14].forEach((targetR, ri) => {
+      const geom = new THREE.RingGeometry(0.1, 0.5, 32);
+      const mat = new THREE.MeshBasicMaterial({
+        color: ri === 0 ? 0xff3300 : 0xff0000,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const ring = new THREE.Mesh(geom, mat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(pos.x, 0.3, pos.z);
+      grpBase.add(ring);
+
+      basePlatformData.push({
+        ring, targetR,
+        currentR: 0.1,
+        buildDelay: buildDelay + ri * 0.4,
+        active: false,
+        pulse: Math.random() * Math.PI * 2,
+      });
+    });
+
+    // Central node core sphere
+    const coreGeom = new THREE.SphereGeometry(i < 3 ? 2.2 : 1.4, 10, 10);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: i < 3 ? 0xff4400 : 0xff1100,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const core = new THREE.Mesh(coreGeom, coreMat);
+    core.position.set(pos.x, 1, pos.z);
+    core.userData = { buildDelay, pulse: Math.random() * Math.PI * 2, isMajor: i < 3 };
+    grpBase.add(core);
+  });
+
+  // ════════════════════════════════════════════════════════
+  //  4. INFRASTRUCTURE TOWERS (GoT: buildings extruding up)
+  //     InstancedMesh for performance — two layers: dark body + wire glow
+  // ════════════════════════════════════════════════════════
+  const TOWER_COUNT = 96;
+  const towerData = [];
+
+  const tBodyGeom = new THREE.BoxGeometry(1, 1, 1);
+  const tBodyMat = new THREE.MeshBasicMaterial({ color: 0x1a0000 });
+  const tWireGeom = new THREE.BoxGeometry(1, 1, 1);
+  const tWireMat = new THREE.MeshBasicMaterial({
+    color: 0xff2200,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.55,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const instBody = new THREE.InstancedMesh(tBodyGeom, tBodyMat, TOWER_COUNT);
+  const instWire = new THREE.InstancedMesh(tWireGeom, tWireMat, TOWER_COUNT);
+  instBody.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  instWire.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  grpTowers.add(instBody, instWire);
+
+  // Build tower cluster around each major node
+  const dummy = new THREE.Object3D();
+  let tIdx = 0;
+
+  MAJOR_NODES.forEach((nodePos, ni) => {
+    const isHQ  = ni < 3;
+    const count = isHQ ? 8 : 4;
+    for (let c = 0; c < count && tIdx < TOWER_COUNT; c++, tIdx++) {
+      const angle  = (c / count) * Math.PI * 2 + Math.random() * 0.5;
+      const radius = (isHQ ? 6 : 3) + Math.random() * (isHQ ? 10 : 6);
+      const px = nodePos.x + Math.cos(angle) * radius;
+      const pz = nodePos.z + Math.sin(angle) * radius;
+      const w  = 1.2 + Math.random() * (isHQ ? 3 : 1.5);
+      const d  = 1.2 + Math.random() * (isHQ ? 3 : 1.5);
+      const targetH = isHQ ? 18 + Math.random() * 30 : 6 + Math.random() * 18;
+
+      towerData.push({
+        px, pz, w, d,
+        height: 0, targetH,
+        buildDelay: 1.5 + ni * 1.1 + c * 0.25,
+        buildSpeed: 0.025 + Math.random() * 0.02,
+        active: false,
+        phase: Math.random() * Math.PI * 2,
+      });
+
+      // Initialise hidden
+      dummy.position.set(px, -500, pz);
+      dummy.scale.set(w, 0.01, d);
+      dummy.updateMatrix();
+      instBody.setMatrixAt(tIdx, dummy.matrix);
+      instWire.setMatrixAt(tIdx, dummy.matrix);
+    }
+  });
+
+  // ════════════════════════════════════════════════════════
+  //  5. ARCING DATA CONDUITS (GoT: trade-route connections)
+  //     Lines that DRAW THEMSELVES progressively
+  // ════════════════════════════════════════════════════════
+  const conduitData = [];
+  const CONDUIT_SEGS = 40;
+  const MAX_CONDUIT_DIST = 100;
+
+  for (let i = 0; i < MAJOR_NODES.length; i++) {
+    for (let j = i + 1; j < MAJOR_NODES.length; j++) {
+      const dist = MAJOR_NODES[i].distanceTo(MAJOR_NODES[j]);
+      if (dist > MAX_CONDUIT_DIST) continue;
+      if (Math.random() > 0.55) continue;
+
+      // Build arc points
+      const from = MAJOR_NODES[i].clone(); from.y = 0.5;
+      const to   = MAJOR_NODES[j].clone(); to.y   = 0.5;
+      const midArc = from.clone().lerp(to, 0.5);
+      midArc.y = 5 + dist * 0.12; // height of arc proportional to distance
+
+      const pts = [];
+      for (let k = 0; k <= CONDUIT_SEGS; k++) {
+        const t  = k / CONDUIT_SEGS;
+        const mt = 1 - t;
+        // Quadratic bezier: P = (1-t)²A + 2(1-t)tM + t²B
+        const p = new THREE.Vector3(
+          mt*mt*from.x + 2*mt*t*midArc.x + t*t*to.x,
+          mt*mt*from.y + 2*mt*t*midArc.y + t*t*to.y,
+          mt*mt*from.z + 2*mt*t*midArc.z + t*t*to.z
+        );
+        pts.push(p);
+      }
+
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      geom.setDrawRange(0, 0);
+
+      const isHighway = dist < 50;
+      const mat = new THREE.LineBasicMaterial({
+        color: isHighway ? 0xff3300 : 0x880000,
+        transparent: true,
+        opacity: isHighway ? 0.55 : 0.3,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+      const line = new THREE.Line(geom, mat);
+      grpConduits.add(line);
+
+      conduitData.push({
+        geom, pts, line,
+        drawProgress: 0,
+        buildDelay: Math.max(
+          1.5 + i * 1.1,
+          1.5 + j * 1.1
+        ) + 1.5, // starts after both nodes are up
+        active: false,
+        drawSpeed: 1.8 + Math.random() * 1.5,
+      });
+    }
+  }
+
+  // ════════════════════════════════════════════════════════
+  //  6. FLOW PARTICLES — data streaming along conduits
+  // ════════════════════════════════════════════════════════
+  const FLOW_COUNT = 200;
+  const flowPositions = new Float32Array(FLOW_COUNT * 3);
+  const flowColors    = new Float32Array(FLOW_COUNT * 3);
+  const flowGeomBuf   = new THREE.BufferGeometry();
+  flowGeomBuf.setAttribute('position', new THREE.BufferAttribute(flowPositions, 3));
+  flowGeomBuf.setAttribute('color',    new THREE.BufferAttribute(flowColors, 3));
+  const flowMat = new THREE.PointsMaterial({
+    size: 1.4,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  });
+  grpFlow.add(new THREE.Points(flowGeomBuf, flowMat));
+
+  const flowState = Array.from({ length: FLOW_COUNT }, () => ({
+    condIdx: Math.floor(Math.random() * conduitData.length),
+    t:       Math.random(),
+    speed:   0.004 + Math.random() * 0.01,
+    dir:     Math.random() > 0.5 ? 1 : -1,
+    isRed:   Math.random() > 0.3,
+  }));
+
+  // ════════════════════════════════════════════════════════
+  //  7. RADAR SWEEP — rotating sector (cyber sonar)
+  // ════════════════════════════════════════════════════════
+  grpRadar.position.y = 0.6;
+
+  const SWEEP_ANGLE = Math.PI * 0.13;
+  // Main bright leading edge
+  const sweepGeom = new THREE.RingGeometry(0, 200, 64, 1, 0, SWEEP_ANGLE);
+  const sweepMat  = new THREE.MeshBasicMaterial({
+    color: 0xff2200,
+    transparent: true,
+    opacity: 0.045,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  grpRadar.add(new THREE.Mesh(sweepGeom, sweepMat));
+
+  // Trailing ghost sectors (fade behind the sweep)
+  const TRAIL_STEPS = 6;
+  for (let t = 1; t <= TRAIL_STEPS; t++) {
+    const trailGeom = new THREE.RingGeometry(
+      0, 200, 64, 1,
+      -SWEEP_ANGLE * t * 0.28,       // offset backward
+       SWEEP_ANGLE * (1 - t / (TRAIL_STEPS + 1)) // narrower the older
+    );
+    const trailMat = new THREE.MeshBasicMaterial({
+      color: 0xff1100,
+      transparent: true,
+      opacity: 0.022 / t,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    grpRadar.add(new THREE.Mesh(trailGeom, trailMat));
+  }
+
+  // Radar outer ring
+  const radarRingGeom = new THREE.RingGeometry(198, 200, 64);
+  const radarRingMat  = new THREE.MeshBasicMaterial({
+    color: 0x440000,
+    transparent: true,
+    opacity: 0.2,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  grpRadar.add(new THREE.Mesh(radarRingGeom, radarRingMat));
+
+  // Radar crosshair lines
+  [-1, 1].forEach(sign => {
+    const lGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(sign * 200, 0, 0)
+    ]);
+    grpRadar.add(new THREE.Line(lGeom, new THREE.LineBasicMaterial({
+      color: 0x330000, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false,
+    })));
+    const lGeom2 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, sign * 200)
+    ]);
+    grpRadar.add(new THREE.Line(lGeom2, new THREE.LineBasicMaterial({
+      color: 0x330000, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false,
+    })));
+  });
+
+  // Concentric range rings
+  [50, 100, 150].forEach(r => {
+    const rGeom = new THREE.RingGeometry(r - 0.3, r + 0.3, 64);
+    const rMat  = new THREE.MeshBasicMaterial({
+      color: 0x220000, transparent: true, opacity: 0.25,
+      side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    grpRadar.add(new THREE.Mesh(rGeom, rMat));
+  });
+
+  grpRadar.rotation.x = -Math.PI / 2;
+
+  // ════════════════════════════════════════════════════════
+  //  8. ATTACK PULSES — expanding shockwave rings
+  // ════════════════════════════════════════════════════════
+  const activePulses = [];
+  let nextPulseTime  = 4;
+  let nextPulseIdx   = 0;
+
+  function spawnPulse(nodeIdx) {
+    const pos = MAJOR_NODES[nodeIdx % MAJOR_NODES.length];
+
+    // Outer shockwave
+    const geom = new THREE.RingGeometry(0.5, 2.5, 48);
+    const mat  = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.7,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(pos.x, 0.4, pos.z);
+    grpPulses.add(mesh);
+
+    // Inner secondary ring (offset timing)
+    const iGeom = new THREE.RingGeometry(0.3, 1.2, 48);
+    const iMat  = new THREE.MeshBasicMaterial({
+      color: 0xff5500,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const inner = new THREE.Mesh(iGeom, iMat);
+    inner.rotation.x = -Math.PI / 2;
+    inner.position.set(pos.x, 0.4, pos.z);
+    grpPulses.add(inner);
+
+    activePulses.push({ mesh, radius: 0.5, maxRadius: 55 + Math.random() * 35, speed: 28 + Math.random() * 18, type: 'outer' });
+    activePulses.push({ mesh: inner, radius: 0.3, maxRadius: 30 + Math.random() * 20, speed: 18 + Math.random() * 10, type: 'inner' });
+  }
+
+  // ════════════════════════════════════════════════════════
+  //  9. ORBITAL RINGS — satellites in the sky
+  // ════════════════════════════════════════════════════════
+  const orbitConfigs = [
+    { radius: 80,  inclX:  0.4, inclZ:  0.1, speed: 0.00025, satSpeed: 0.0008, color: 0x330000 },
+    { radius: 110, inclX: -0.5, inclZ:  0.3, speed: 0.00018, satSpeed: 0.0006, color: 0x220000 },
+    { radius: 145, inclX:  0.2, inclZ: -0.4, speed: 0.00012, satSpeed: 0.0004, color: 0x1a0000 },
+    { radius: 175, inclX: -0.15,inclZ:  0.5, speed: 0.00008, satSpeed: 0.0003, color: 0x110000 },
+  ];
+
+  const satelliteData = [];
+  orbitConfigs.forEach((cfg, oi) => {
+    // Ring
+    const pts = [];
+    for (let a = 0; a <= 64; a++) {
+      const ang = (a / 64) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(ang) * cfg.radius, 0, Math.sin(ang) * cfg.radius));
+    }
+    const rGeom = new THREE.BufferGeometry().setFromPoints(pts);
+    const rMat  = new THREE.LineBasicMaterial({
+      color: cfg.color, transparent: true, opacity: 0.35,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const ring = new THREE.Line(rGeom, rMat);
+    ring.rotation.x = cfg.inclX;
+    ring.rotation.z = cfg.inclZ;
+    ring.position.y = 55 + oi * 10;
+    grpOrbit.add(ring);
+
+    // Satellite (octahedron)
+    const sGeom = new THREE.OctahedronGeometry(oi < 2 ? 1.8 : 1.2, 0);
+    const sMat  = new THREE.MeshBasicMaterial({
+      color: oi < 2 ? 0xff3300 : 0xcc1100,
+      wireframe: true, transparent: true, opacity: 0.8,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const sat = new THREE.Mesh(sGeom, sMat);
+    sat.position.y = ring.position.y;
+    grpOrbit.add(sat);
+
+    satelliteData.push({
+      sat, ring, ...cfg,
+      angle: Math.random() * Math.PI * 2,
+      py: ring.position.y,
+    });
+  });
+
+  // ════════════════════════════════════════════════════════
+  //  10. STARS & ATMOSPHERE
+  // ════════════════════════════════════════════════════════
+  const starCount = 600;
+  const starPos   = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 500 + Math.random() * 200;
+    starPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    starPos[i*3+1] = Math.abs(r * Math.cos(phi)) * 0.8;
+    starPos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+  }
+  const starGeom = new THREE.BufferGeometry();
+  starGeom.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  grpAtmosphere.add(new THREE.Points(starGeom, new THREE.PointsMaterial({
+    color: 0x441111, size: 0.7, transparent: true, opacity: 0.45,
+    sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  })));
+
+  // Atmospheric dust motes
+  const dustCount = 400;
+  const dustBuf   = new Float32Array(dustCount * 3);
+  for (let i = 0; i < dustCount; i++) {
+    dustBuf[i*3]   = (Math.random() - 0.5) * 300;
+    dustBuf[i*3+1] = Math.random() * 80 + 5;
+    dustBuf[i*3+2] = (Math.random() - 0.5) * 300;
+  }
+  const dustGeomBuf = new THREE.BufferGeometry();
+  dustGeomBuf.setAttribute('position', new THREE.BufferAttribute(dustBuf, 3));
+  const dustPts = new THREE.Points(dustGeomBuf, new THREE.PointsMaterial({
+    color: 0x330000, size: 0.5, transparent: true, opacity: 0.3,
+    sizeAttenuation: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  grpAtmosphere.add(dustPts);
+
+  // ════════════════════════════════════════════════════════
+  //  MOUSE PARALLAX
+  // ════════════════════════════════════════════════════════
+  let mouseParallaxX = 0, mouseParallaxY = 0;
+  let targetParallaxX = 0, targetParallaxY = 0;
+  document.addEventListener('mousemove', e => {
+    targetParallaxX = (e.clientX / window.innerWidth  - 0.5) * 25;
+    targetParallaxY = (e.clientY / window.innerHeight - 0.5) * 12;
+  });
+
+  // ════════════════════════════════════════════════════════
+  //  CAMERA CINEMATIC PATH
+  //  Phase 1 (0-8s):  High altitude establishing shot, slow descend
+  //  Phase 2 (8s+):   Slow orbit with gentle elevation breathing
+  // ════════════════════════════════════════════════════════
+  let camOrbitAngle = Math.PI * 0.25; // start slightly off-axis
+  let camRadius     = 220;
+  let camHeight     = 190;
+  const CAM_ORBIT_SPEED   = 0.0012;
+  const CAM_TARGET_RADIUS = 155;
+  const CAM_TARGET_HEIGHT = 95;
+
+  // Camera look target (slightly above the map center for drama)
+  const camLookTarget = new THREE.Vector3(0, -8, 0);
+
+  // ════════════════════════════════════════════════════════
+  //  ANIMATION LOOP
+  // ════════════════════════════════════════════════════════
+  function animate() {
+    requestAnimationFrame(animate);
+    const delta   = clock.getDelta();
+    const elapsed = clock.getElapsedTime();
+
+    // ─ MOUSE PARALLAX ─
+    mouseParallaxX += (targetParallaxX - mouseParallaxX) * 0.04;
+    mouseParallaxY += (targetParallaxY - mouseParallaxY) * 0.04;
+
+    // ─ TERRAIN WAVE ANIMATION ─
+    const posArr = terrGeom.attributes.position.array;
+    const colArr = terrGeom.attributes.color.array;
+    for (let i = 0; i < posArr.length; i += 3) {
+      const ox = basePos[i], oz = basePos[i + 2];
+      const wave = Math.sin(ox * 0.018 + elapsed * 0.28) * Math.cos(oz * 0.014 + elapsed * 0.2) * 3.5
+                 + Math.sin(ox * 0.008 + elapsed * 0.12) * 1.5;
+      posArr[i + 1] = wave;
+      // Color: elevated = slightly red, valleys = near black
+      const t = (wave + 5) / 10;
+      colArr[i]     = 0.03 + t * 0.12; // R
+      colArr[i + 1] = 0;               // G
+      colArr[i + 2] = 0;               // B
+    }
+    terrGeom.attributes.position.needsUpdate = true;
+    terrGeom.attributes.color.needsUpdate    = true;
+
+    // ─ BASE PLATFORM RINGS (expanding construction) ─
+    basePlatformData.forEach(d => {
+      if (!d.active && elapsed > d.buildDelay) d.active = true;
+      if (!d.active) return;
+
+      if (d.currentR < d.targetR) {
+        d.currentR = Math.min(d.currentR + (d.targetR - d.currentR) * 0.06 + 0.08, d.targetR);
+        const ir = Math.max(0, d.currentR - 0.5);
+        const newGeom = new THREE.RingGeometry(ir, d.currentR, 32);
+        d.ring.geometry.dispose();
+        d.ring.geometry = newGeom;
+      }
+      // Fade in then pulse
+      const progress = Math.min(1, (elapsed - d.buildDelay) / 1.5);
+      const pulse    = 0.5 + Math.sin(elapsed * 1.8 + d.pulse) * 0.25;
+      d.ring.material.opacity = progress * pulse * 0.55;
+    });
+
+    // Node cores: fade in and pulse
+    grpBase.children.forEach(obj => {
+      if (obj.geometry && obj.geometry.type === 'SphereGeometry') {
+        const ud = obj.userData;
+        if (!ud.active && elapsed > ud.buildDelay) ud.active = true;
+        if (!ud.active) return;
+        const prog  = Math.min(1, (elapsed - ud.buildDelay) / 1.2);
+        const pulse = 0.65 + Math.sin(elapsed * 2.2 + ud.pulse) * 0.35;
+        obj.material.opacity  = prog * pulse * 0.85;
+        const sc = 1 + Math.sin(elapsed * 2.2 + ud.pulse + 1) * 0.12;
+        obj.scale.setScalar(sc);
+      }
+    });
+
+    // ─ TOWER CONSTRUCTION (GoT: buildings rising) ─
+    towerData.forEach((td, i) => {
+      if (!td.active && elapsed > td.buildDelay) td.active = true;
+      if (!td.active) return;
+
+      if (td.height < td.targetH) {
+        td.height += td.targetH * td.buildSpeed;
+        td.height  = Math.min(td.height, td.targetH);
+      }
+      // Subtle height flicker at top during construction
+      const h = td.height < td.targetH
+        ? td.height
+        : td.targetH * (0.97 + Math.sin(elapsed * 3 + td.phase) * 0.015);
+
+      dummy.position.set(td.px, h / 2, td.pz);
+      dummy.scale.set(td.w, Math.max(0.01, h), td.d);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      instBody.setMatrixAt(i, dummy.matrix);
+      instWire.setMatrixAt(i, dummy.matrix);
+    });
+    instBody.instanceMatrix.needsUpdate = true;
+    instWire.instanceMatrix.needsUpdate = true;
+
+    // ─ CONDUIT DRAW ANIMATION ─
+    conduitData.forEach(cd => {
+      if (!cd.active && elapsed > cd.buildDelay) cd.active = true;
+      if (!cd.active) return;
+
+      if (cd.drawProgress < cd.pts.length) {
+        cd.drawProgress = Math.min(cd.drawProgress + cd.drawSpeed, cd.pts.length);
+        cd.geom.setDrawRange(0, Math.floor(cd.drawProgress));
+      }
+      // Subtle opacity pulse once fully drawn
+      if (cd.drawProgress >= cd.pts.length) {
+        cd.line.material.opacity = 0.3 + Math.sin(elapsed * 1.2 + cd.buildDelay) * 0.12;
+      }
+    });
+
+    // ─ FLOW PARTICLES along conduits ─
+    flowState.forEach((fp, i) => {
+      const cd = conduitData[fp.condIdx % conduitData.length];
+      if (!cd || !cd.active || cd.drawProgress < cd.pts.length * 0.5) {
+        flowPositions[i*3+1] = -2000; // park below terrain
+        return;
+      }
+      fp.t += fp.speed * fp.dir;
+      if (fp.t > 1) { fp.t = 0; fp.condIdx = Math.floor(Math.random() * conduitData.length); }
+      if (fp.t < 0) { fp.t = 1; fp.condIdx = Math.floor(Math.random() * conduitData.length); }
+      const ptIdx = Math.min(Math.floor(fp.t * (cd.pts.length - 1)), cd.pts.length - 1);
+      const pt    = cd.pts[ptIdx];
+      flowPositions[i*3]   = pt.x;
+      flowPositions[i*3+1] = pt.y;
+      flowPositions[i*3+2] = pt.z;
+      if (fp.isRed) {
+        flowColors[i*3]=1; flowColors[i*3+1]=0.13; flowColors[i*3+2]=0;
+      } else {
+        flowColors[i*3]=0; flowColors[i*3+1]=1;    flowColors[i*3+2]=0.25;
+      }
+    });
+    flowGeomBuf.attributes.position.needsUpdate = true;
+    flowGeomBuf.attributes.color.needsUpdate    = true;
+
+    // ─ RADAR SWEEP ─
+    grpRadar.rotation.z += 0.007; // rotate around Y in world space (grpRadar is X-rotated)
+
+    // ─ ATTACK PULSES ─
+    if (elapsed > nextPulseTime) {
+      spawnPulse(nextPulseIdx);
+      nextPulseIdx  = (nextPulseIdx + 1) % MAJOR_NODES.length;
+      nextPulseTime = elapsed + 2.2 + Math.random() * 3.5;
+    }
+    for (let pi = activePulses.length - 1; pi >= 0; pi--) {
+      const p    = activePulses[pi];
+      p.radius  += p.speed * delta;
+      p.mesh.scale.setScalar(p.radius);
+      p.mesh.material.opacity = Math.max(0, (p.type === 'outer' ? 0.65 : 0.45) * (1 - p.radius / p.maxRadius));
+      if (p.radius >= p.maxRadius) {
+        grpPulses.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        p.mesh.material.dispose();
+        activePulses.splice(pi, 1);
+      }
+    }
+
+    // ─ ORBITAL SATELLITES ─
+    satelliteData.forEach(sd => {
+      sd.angle += sd.satSpeed;
+      // Orbit in the ring's local plane
+      const localX = Math.cos(sd.angle) * sd.radius;
+      const localZ = Math.sin(sd.angle) * sd.radius;
+      // Apply ring inclination to satellite world position
+      const cx = Math.cos(sd.inclZ), sx = Math.sin(sd.inclZ);
+      const cy = Math.cos(sd.inclX), sy = Math.sin(sd.inclX);
+      sd.sat.position.x = localX * cx  - localZ * sx * 0.2;
+      sd.sat.position.y = sd.py + localX * sy + localZ * cy * Math.sin(sd.inclX);
+      sd.sat.position.z = localX * sx  + localZ * cx;
+      sd.sat.rotation.y  += 0.02;
+      sd.ring.rotation.y += sd.speed;
+    });
+
+    // ─ ATMOSPHERIC DUST drift ─
+    dustPts.rotation.y += 0.0002;
+
+    // ─ CINEMATIC CAMERA ─
+    // Phase 1: Slow descent from high orbital view (0–9s)
+    const phase1Progress = Math.min(1, elapsed / 9);
+    const eased = phase1Progress < 1 ? 1 - Math.pow(1 - phase1Progress, 3) : 1;
+
+    camRadius = 220 - (220 - CAM_TARGET_RADIUS) * eased;
+    camHeight = 190 - (190 - CAM_TARGET_HEIGHT) * eased;
+
+    // Phase 2: Slow continuous orbit
+    if (elapsed > 4) {
+      camOrbitAngle += CAM_ORBIT_SPEED;
+    }
+
+    // Elevation breathing (slow inhale/exhale)
+    const elevBreath = Math.sin(elapsed * 0.07) * 15;
+
+    // Mouse parallax adds subtle tilt
+    const finalRadius = camRadius + Math.sin(elapsed * 0.04) * 8;
+    camera.position.x = Math.cos(camOrbitAngle) * finalRadius + mouseParallaxX * 0.6;
+    camera.position.z = Math.sin(camOrbitAngle) * finalRadius;
+    camera.position.y = camHeight + elevBreath + mouseParallaxY * 0.4;
+
+    // Gently shift look target for drama
+    camLookTarget.x = Math.sin(elapsed * 0.05) * 5;
+    camLookTarget.z = Math.cos(elapsed * 0.04) * 5;
+    camera.lookAt(camLookTarget);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+})();
+
+
+// ══════════════════════════════════════════════════════════════
+//  LOADING SCREEN
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hidden');
+    initHeroAnimations();
+  }, 1800);
+});
+
+
+// ══════════════════════════════════════════════════════════════
+//  COUNTDOWN TIMER
+// ══════════════════════════════════════════════════════════════
+const EVENT_DATE = new Date('2026-06-15T09:00:00');
+
+function pad(n, w = 2) { return String(n).padStart(w, '0'); }
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = EVENT_DATE - now;
+
+  if (diff <= 0) {
+    ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '00';
+    });
+    ['hcd-days','hcd-hours','hcd-mins','hcd-secs'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '00';
+    });
+    return;
+  }
+
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000)  / 60000);
+  const seconds = Math.floor((diff % 60000)    / 1000);
+
+  const dEl = document.getElementById('cd-days');
+  const hEl = document.getElementById('cd-hours');
+  const mEl = document.getElementById('cd-mins');
+  const sEl = document.getElementById('cd-secs');
+
+  if (dEl) dEl.textContent = pad(days, 3);
+  if (hEl) hEl.textContent = pad(hours);
+  if (mEl) mEl.textContent = pad(minutes);
+  if (sEl) sEl.textContent = pad(seconds);
+
+  const hdEl = document.getElementById('hcd-days');
+  const hhEl = document.getElementById('hcd-hours');
+  const hmEl = document.getElementById('hcd-mins');
+  const hsEl = document.getElementById('hcd-secs');
+
+  if (hdEl) hdEl.textContent = pad(days, 3);
+  if (hhEl) hhEl.textContent = pad(hours);
+  if (hmEl) hmEl.textContent = pad(minutes);
+  if (hsEl) hsEl.textContent = pad(seconds);
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+
+// ══════════════════════════════════════════════════════════════
+//  GSAP SCROLL ANIMATIONS
+// ══════════════════════════════════════════════════════════════
+gsap.registerPlugin(ScrollTrigger);
+
+function initHeroAnimations() {
+  // Hero entrance
+  const heroTl = gsap.timeline({ delay: 0.2 });
+  heroTl
+    .to('#hero-classified', { opacity: 1, duration: 0.5, ease: 'power2.out' })
+    .to('#hero-title', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.2')
+    .to('#hero-subtitle', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.4')
+    .to('#hero-tagline', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.3')
+    .to('#hero-countdown', { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, '-=0.2')
+    .to('#hero-cta', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.3')
+    .to('#hero-info', { opacity: 1, duration: 0.6, ease: 'power2.out' }, '-=0.3');
+}
+
+// Scroll reveal
+function revealOnScroll(selector, vars = {}) {
+  document.querySelectorAll(selector).forEach((el, i) => {
+    gsap.to(el, {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      scale: 1,
+      duration: 0.7,
+      ease: 'power3.out',
+      delay: i * 0.08,
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 88%',
+        toggleActions: 'play none none none',
+      },
+      ...vars
+    });
+  });
+}
+
+revealOnScroll('.reveal');
+revealOnScroll('.reveal-left');
+revealOnScroll('.reveal-right');
+revealOnScroll('.reveal-scale');
+
+// Stagger children within grids
+ScrollTrigger.batch('.rules-grid .rule-card, .sponsors-grid .sponsor-card, .team-grid .team-card', {
+  start: 'top 90%',
+  onEnter: (els) => {
+    gsap.to(els, {
+      opacity: 1, y: 0, x: 0, scale: 1,
+      stagger: 0.08,
+      duration: 0.6,
+      ease: 'power3.out',
+    });
+  },
+});
+
+// Prize cards special entrance
+ScrollTrigger.batch('.prize-card', {
+  start: 'top 90%',
+  onEnter: (els) => {
+    gsap.fromTo(els,
+      { opacity: 0, y: 60, rotateY: 10 },
+      { opacity: 1, y: 0, rotateY: 0, stagger: 0.15, duration: 0.8, ease: 'power3.out' }
+    );
+  },
+});
+
+
+// ══════════════════════════════════════════════════════════════
+//  TYPING EFFECT FOR TERMINAL
+// ══════════════════════════════════════════════════════════════
+const termLines = [
+  'status --check all',
+  'ping tervalis-command.mil',
+  'connect --secure tervalis_alpha_net',
+  'awaiting_operatives...',
+];
+let termIdx = 0;
+let charIdx = 0;
+let typing = true;
+
+function typeTerm() {
+  const el = document.getElementById('typing-line');
+  if (!el) return;
+  const line = termLines[termIdx];
+
+  if (typing) {
+    if (charIdx <= line.length) {
+      el.textContent = line.substring(0, charIdx);
+      charIdx++;
+      setTimeout(typeTerm, 55 + Math.random() * 40);
+    } else {
+      typing = false;
+      setTimeout(typeTerm, 1800);
+    }
+  } else {
+    if (charIdx > 0) {
+      el.textContent = line.substring(0, charIdx - 1);
+      charIdx--;
+      setTimeout(typeTerm, 30);
+    } else {
+      typing = true;
+      termIdx = (termIdx + 1) % termLines.length;
+      setTimeout(typeTerm, 400);
+    }
+  }
+}
+
+setTimeout(typeTerm, 3000);
+
+
+// ══════════════════════════════════════════════════════════════
+//  PRIZE CARD PARTICLE EFFECTS
+// ══════════════════════════════════════════════════════════════
+function createPrizeParticles(containerId, color) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.classList.add('pcp');
+    p.style.left = (Math.random() * 100) + '%';
+    p.style.background = color;
+    p.style.boxShadow = '0 0 6px ' + color;
+    p.style.animationDelay = (Math.random() * 4) + 's';
+    p.style.animationDuration = (3 + Math.random() * 3) + 's';
+    container.appendChild(p);
+  }
+}
+
+createPrizeParticles('gold-particles', '#ffd700');
+createPrizeParticles('silver-particles', '#c0c0c0');
+createPrizeParticles('bronze-particles', '#cd7f32');
+
+
+// ══════════════════════════════════════════════════════════════
+//  NAV BACKGROUND ON SCROLL
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('nav');
+  if (window.scrollY > 100) {
+    nav.style.background = 'rgba(0,0,0,0.95)';
+    nav.style.borderBottomColor = 'rgba(255,0,0,0.2)';
+  } else {
+    nav.style.background = 'linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%)';
+    nav.style.borderBottomColor = 'rgba(255,0,0,0.1)';
+  }
+});
+
+
+// ══════════════════════════════════════════════════════════════
+//  CURSOR GLOW
+// ══════════════════════════════════════════════════════════════
+const cursorGlow = document.createElement('div');
+cursorGlow.style.cssText = `
+  position: fixed;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,0,0,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  transition: width 0.3s, height 0.3s, opacity 0.3s;
+`;
+document.body.appendChild(cursorGlow);
+
+let cursorX = 0, cursorY = 0;
+let targetCursorX = 0, targetCursorY = 0;
+
+document.addEventListener('mousemove', (e) => {
+  targetCursorX = e.clientX;
+  targetCursorY = e.clientY;
+});
+
+function animateCursor() {
+  cursorX += (targetCursorX - cursorX) * 0.1;
+  cursorY += (targetCursorY - cursorY) * 0.1;
+  cursorGlow.style.left = cursorX + 'px';
+  cursorGlow.style.top = cursorY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+
+// ══════════════════════════════════════════════════════════════
+//  GLITCH EFFECT ON TITLE (RANDOM)
+// ══════════════════════════════════════════════════════════════
+setInterval(() => {
+  const title = document.getElementById('hero-title');
+  if (!title) return;
+  if (Math.random() > 0.85) {
+    title.style.transform = `translate(${(Math.random()-0.5)*4}px, ${(Math.random()-0.5)*2}px)`;
+    setTimeout(() => { title.style.transform = ''; }, 80);
+  }
+}, 2000);
+
+</script>
+</body>
+</html>
